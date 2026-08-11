@@ -30,17 +30,21 @@ export default function DSALab() {
     loadProblems();
   }, []);
 
+  const [errorMsg, setErrorMsg] = useState(null);
+
   const handleSelect = (prob) => {
     setSelectedProb(prob);
     setUserCode(prob.python_solution || "");
     setShowHint(false);
     setShowSolution(false);
     setResult(null);
+    setErrorMsg(null);
   };
 
   const handleRun = async () => {
     if (!selectedProb) return;
     setExecuting(true);
+    setErrorMsg(null);
     try {
       const res = await fetchApi(`/coding-problems/${selectedProb.id}/attempt`, {
         method: "POST",
@@ -48,7 +52,8 @@ export default function DSALab() {
       });
       setResult(res);
     } catch (err) {
-      console.error(err);
+      console.error("Code execution error:", err);
+      setErrorMsg(err.message || "Failed to execute Python solution. Please check server connection.");
     } finally {
       setExecuting(false);
     }
@@ -158,6 +163,17 @@ export default function DSALab() {
                 <span>{executing ? "Executing Test Cases..." : "Run & Submit Python Code"}</span>
               </button>
             </div>
+
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="p-4 rounded-xl border bg-red-500/10 border-red-500/30 text-red-400 text-xs space-y-1">
+                <div className="font-bold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Execution Request Error</span>
+                </div>
+                <p>{errorMsg}</p>
+              </div>
+            )}
 
             {/* Test Results */}
             {result && (
